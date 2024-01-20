@@ -77,7 +77,7 @@ def statcast_raw_data_to_polynomial_matrix(launch_speed, vertical_launch_angle, 
         data_matrix - 2D np array data matrix with shape (num_samples, num_features+1)
         scaler - scaler fitted to data if none. Returns the input scaler otherwise
     '''
-    num_features = 9
+    num_features = 12
     num_samples = len(launch_speed)
     X = np.zeros((num_samples, num_features))
     X[:,0] = launch_speed
@@ -89,6 +89,9 @@ def statcast_raw_data_to_polynomial_matrix(launch_speed, vertical_launch_angle, 
     X[:,6] = horizontal_launch_angle ** 2.0
     X[:,7] = horizontal_launch_angle ** 3.0
     X[:,8] = horizontal_launch_angle ** 4.0
+    X[:,9] = vertical_launch_angle * launch_speed
+    X[:,10] = horizontal_launch_angle * launch_speed
+    X[:,11] = vertical_launch_angle * horizontal_launch_angle
     if not scaler:
         scaler = StandardScaler()
         X = scaler.fit_transform(X)
