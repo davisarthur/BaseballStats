@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 TEAMS = ['HOU', 'PHI', 'NYY', 'SD', 'CLE',
          'SEA', 'LAD', 'ATL', 'NYM', 'TOR',
@@ -48,3 +49,52 @@ def normalize_hc(hc_x, hc_y):
     normalized_x = hc_x - 128
     normalized_y = 200 - hc_y
     return (normalized_x, normalized_y)
+
+def statcast_df_to_polynomial_data_matrix(df, scaler=None):
+    '''
+    Creates a data matrix from statcast batted balls data. All features in the data matrix
+    are computed from the launch speed, vertical launch angle, and horizontal launch angle
+    of the batted ball. The labels array indicates if batted ball was an out (0), single (1),
+    double (2), triple (3), or home run (4).
+
+    Returns (data_matrix, labels_array)
+        data_matrix - 2D np array data matrix with shape (num_samples, num_features+1)
+        labels_array - 1D np array with length num_samples
+        scaler - scaler fitted to data if none. Returns the input scaler otherwise
+    '''
+    launch_speed = df['launch_speed'].to_numpy()
+    vertical_launch_angle = df['launch_angle'].to_numpy()
+    horizontal_launch_angle = df['horizontal_angle'].to_numpy()
+    X, scaler = statcast_raw_data_to_polynomial_matrix(launch_speed, vertical_launch_angle, horizontal_launch_angle, scaler)
+    Y = df['result'].to_numpy()
+    return X, Y, scaler
+
+def statcast_raw_data_to_polynomial_matrix(launch_speed, vertical_launch_angle, horizontal_launch_angle, scaler=None):
+    '''
+    Creates a polynomial data matrix from statcast launch speed, vertical launch angle, horizontal angle.
+
+    Returns (data_matrix, labels_array)
+        data_matrix - 2D np array data matrix with shape (num_samples, num_features+1)
+        scaler - scaler fitted to data if none. Returns the input scaler otherwise
+    '''
+    num_features = 9
+    num_samples = len(launch_speed)
+    X = np.zeros((num_samples, num_features))
+    X[:,0] = launch_speed
+    X[:,1] = launch_speed ** 2.0
+    X[:,2] = launch_speed ** 3.0
+    X[:,3] = vertical_launch_angle
+    X[:,4] = vertical_launch_angle ** 2.0
+    X[:,5] = horizontal_launch_angle
+    X[:,6] = horizontal_launch_angle ** 2.0
+    X[:,7] = horizontal_launch_angle ** 3.0
+    X[:,8] = horizontal_launch_angle ** 4.0
+    if not scaler:
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+    else:
+        X = scaler.transform(X)
+    X_with_bias = np.zeros((len(launch_speed), num_features+1))
+    X_with_bias[:,1:] = X
+    X_with_bias[:,0] = np.ones(num_samples)
+    return X_with_bias, scaler
