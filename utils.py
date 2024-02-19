@@ -15,6 +15,14 @@ EVENT_VALUE = {
     'home_run': 4,
 }
 
+RESULT_NAME = {
+    0: 'out',
+    1: 'single',
+    2: 'double',
+    3: 'triple',
+    4: 'home run',
+}
+
 EVENT_COLOR = {
     'out': '#C200FB', # purple
     'single': '#EC0868', # raspberry
